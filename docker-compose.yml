@@ -1,0 +1,45 @@
+version: '3.0'
+
+services:
+  # consul server，对外暴露的ui接口为8500，可通过ui直接访问consulserver，并且配置在2台consul服务器的情况下集群才起作用
+  consulserver:
+    image: consul:1.3.0
+    hostname: consulserver
+    volumes:
+      - /consulserver/data/:/consul/data
+    ports:
+      - "8300"
+      - "8400"
+      - "8500:8500"
+      - "53"
+    command: -server --bootstrap-expect=2
+
+  # consul server1在consul server服务起来后，加入集群中
+  consulserver1:
+    image: consul:1.3.0
+    hostname: consulserver1
+    volumes:
+      - /consulserver1/data/:/consul/data
+    depends_on:
+      - "consulserver"
+    ports:
+      - "8300"
+      - "8400"
+      - "8500"
+      - "53"
+    command: -server -join consulserver
+
+  # consul server2在consul server服务起来后，加入集群中
+  consulserver2:
+    image: consul:1.3.0
+    hostname: consulserver2
+    volumes:
+      - /consulserver2/data/:/consul/data
+    depends_on:
+      - "consulserver"
+    ports:
+      - "8300"
+      - "8400"
+      - "8500"
+      - "53"
+    command: -server -join consulserver
